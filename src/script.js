@@ -1,9 +1,4 @@
 document.addEventListener("DOMContentLoaded", function () {
-  let cube_rotation = 0.0;
-  let pyramid_rotation = 0.0;
-  let delta1 = 0;
-  let delta2 = 0;
-
   // Step 1 : Shaders
   // Vertex shader program
   const vertex_shader_source = `
@@ -99,32 +94,15 @@ document.addEventListener("DOMContentLoaded", function () {
   };
 
   // Step 4 : Create buffer to contain vertex
-  const create_buffers_cube = (gl) => {
+  const create_buffers = (gl, positions, colors, indices) => {
     // 1. Initialize buffer position
-    const position_buffer = create_buffer_position_cube(gl);
+    const position_buffer = create_buffer_position(gl, positions);
 
     // 2. Initialize buffer colors
-    const color_buffer = create_buffer_color(gl);
+    const color_buffer = create_buffer_color(gl, colors);
 
     // 3. Initiailize buffer index
-    const index_buffer = create_buffer_index(gl);
-
-    return {
-      position: position_buffer,
-      color: color_buffer,
-      indices: index_buffer,
-    };
-  };
-
-  const create_buffers_pyramid = (gl) => {
-    // 1. Initialize buffer position
-    const position_buffer = create_buffer_position_pyramid(gl);
-
-    // 2. Initialize buffer colors
-    const color_buffer = create_buffer_color(gl);
-
-    // 3. Initiailize buffer index
-    const index_buffer = create_buffer_index(gl);
+    const index_buffer = create_buffer_index(gl, indices);
 
     return {
       position: position_buffer,
@@ -134,66 +112,13 @@ document.addEventListener("DOMContentLoaded", function () {
   };
 
   // Function to create buffer position
-  const create_buffer_position_pyramid = (gl) => {
+  const create_buffer_position = (gl, positions) => {
     // Create a buffer for the square's positions.
     const position_buffer = gl.createBuffer();
 
     // Select the positionBuffer as the one to apply buffer
     // operations to from here out.
     gl.bindBuffer(gl.ARRAY_BUFFER, position_buffer);
-
-    const positions = [
-      // Pyramid vertices
-      // Front face
-      0.0, 1.0, 0.0, -1.0, -1.0, 1.0, 1.0, -1.0, 1.0,
-      // Back face
-      0.0, 1.0, 0.0, 1.0, -1.0, -1.0, -1.0, -1.0, -1.0,
-      // Left face
-      0.0, 1.0, 0.0, -1.0, -1.0, -1.0, -1.0, -1.0, 1.0,
-      // Tes
-      0.0, 1.0, 0.0, -1.0, -1.0, -1.0, -1.0, -1.0, 1.0,
-      // Right face
-      0.0, 1.0, 0.0, 1.0, -1.0, 1.0, 1.0, -1.0, -1.0,
-      // Tes
-      1.0, -1.0, -1.0,
-    ];
-
-    // Now pass the list of positions into WebGL to build the
-    // shape. We do this by creating a Float32Array from the
-    // JavaScript array, then use it to fill the current buffer.
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
-
-    return position_buffer;
-  };
-
-  // Function to create buffer position
-  const create_buffer_position_cube = (gl) => {
-    // Create a buffer for the square's positions.
-    const position_buffer = gl.createBuffer();
-
-    // Select the positionBuffer as the one to apply buffer
-    // operations to from here out.
-    gl.bindBuffer(gl.ARRAY_BUFFER, position_buffer);
-
-    const positions = [
-      // Front face
-      -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0, 1.0,
-
-      // Back face
-      -1.0, -1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0, -1.0,
-
-      // Top face
-      -1.0, 1.0, -1.0, -1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, -1.0,
-
-      // Bottom face
-      -1.0, -1.0, -1.0, 1.0, -1.0, -1.0, 1.0, -1.0, 1.0, -1.0, -1.0, 1.0,
-
-      // Right face
-      1.0, -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0,
-
-      // Left face
-      -1.0, -1.0, -1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0,
-    ];
 
     // Now pass the list of positions into WebGL to build the
     // shape. We do this by creating a Float32Array from the
@@ -204,13 +129,8 @@ document.addEventListener("DOMContentLoaded", function () {
   };
 
   // Function to create buffer color
-  const create_buffer_color = (gl) => {
-    const face_colors = [
-      [1.0, 0.0, 0.0, 1.0], // Red
-      [0.0, 1.0, 0.0, 1.0], // Green
-      [0.0, 0.0, 1.0, 1.0], // Blue
-      [1.0, 1.0, 0.0, 1.0], // Yellow
-    ];
+  const create_buffer_color = (gl, color) => {
+    const face_colors = color;
 
     // Convert the array of colors into a table for all the vertices.
     var colors = [];
@@ -229,52 +149,9 @@ document.addEventListener("DOMContentLoaded", function () {
   };
 
   // Function to create buffer index
-  const create_buffer_index = (gl) => {
+  const create_buffer_index = (gl, indices) => {
     const index_buffer = gl.createBuffer();
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, index_buffer);
-
-    // This array defines each face as two triangles, using the
-    // indices into the vertex array to specify each triangle's
-    // position.
-
-    const indices = [
-      0,
-      1,
-      2,
-      0,
-      2,
-      3, // front
-      4,
-      5,
-      6,
-      4,
-      6,
-      7, // back
-      8,
-      9,
-      10,
-      8,
-      10,
-      11, // top
-      12,
-      13,
-      14,
-      12,
-      14,
-      15, // bottom
-      16,
-      17,
-      18,
-      16,
-      18,
-      19, // right
-      20,
-      21,
-      22,
-      20,
-      22,
-      23, // left
-    ];
 
     // Now send the element array to GL
     gl.bufferData(
@@ -287,7 +164,7 @@ document.addEventListener("DOMContentLoaded", function () {
   };
 
   // Step 5 : Rendering The Scene
-  const draw_scene_cube = (gl, program_info, buffers, cube_rotation) => {
+  const draw_scene = (gl, program_info, buffers, rotation, vertex_count) => {
     gl.clearColor(0.0, 0.0, 0.0, 1.0); // Clear to black, fully opaque
     gl.clearDepth(1.0); // Clear everything
     gl.enable(gl.DEPTH_TEST); // Enable depth testing
@@ -327,19 +204,19 @@ document.addEventListener("DOMContentLoaded", function () {
     mat4.rotate(
       model_view_matrix, // destination matrix
       model_view_matrix, // matrix to rotate
-      cube_rotation, // amount to rotate in radians
+      rotation, // amount to rotate in radians
       [0, 0, 1]
     ); // axis to rotate around (Z)
     mat4.rotate(
       model_view_matrix, // destination matrix
       model_view_matrix, // matrix to rotate
-      cube_rotation * 0.7, // amount to rotate in radians
+      rotation * 0.7, // amount to rotate in radians
       [0, 1, 0]
     ); // axis to rotate around (Y)
     mat4.rotate(
       model_view_matrix, // destination matrix
       model_view_matrix, // matrix to rotate
-      cube_rotation * 0.3, // amount to rotate in radians
+      rotation * 0.3, // amount to rotate in radians
       [1, 0, 0]
     ); // axis to rotate around (X)
 
@@ -369,95 +246,6 @@ document.addEventListener("DOMContentLoaded", function () {
     );
 
     // Draw elements
-    const vertex_count = 36;
-    const type = gl.UNSIGNED_SHORT;
-    const offset = 0;
-    gl.drawElements(gl.TRIANGLES, vertex_count, type, offset);
-  };
-
-  const draw_scene_pyramid = (gl, program_info, buffers, pyramid_rotation) => {
-    gl.clearColor(0.0, 0.0, 0.0, 1.0); // Clear to black, fully opaque
-    gl.clearDepth(1.0); // Clear everything
-    gl.enable(gl.DEPTH_TEST); // Enable depth testing
-    gl.depthFunc(gl.LEQUAL); // Near things obscure far things
-
-    // Clear the canvas before we start drawing on it.
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-    // Create a perspective matrix, a special matrix that is
-    // used to simulate the distortion of perspective in a camera.
-    // Our field of view is 45 degrees, with a width/height
-    // ratio that matches the display size of the canvas
-    // and we only want to see objects between 0.1 units
-    // and 100 units away from the camera.
-    const field_of_view = (45 * Math.PI) / 180; // in radians
-    const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
-    const z_near = 0.1;
-    const z_far = 100.0;
-    const projection_matrix = mat4.create();
-
-    // note: glmatrix.js always has the first argument
-    // as the destination to receive the result.
-    mat4.perspective(projection_matrix, field_of_view, aspect, z_near, z_far);
-
-    // Set the drawing position to the "identity" point, which is
-    // the center of the scene.
-    const model_view_matrix = mat4.create();
-
-    // Now move the drawing position a bit to where we want to
-    // start drawing the square.
-    mat4.translate(
-      model_view_matrix, // destination matrix
-      model_view_matrix, // matrix to translate
-      [-0.0, 0.0, -6.0]
-    ); // amount to translate
-
-    mat4.rotate(
-      model_view_matrix, // destination matrix
-      model_view_matrix, // matrix to rotate
-      pyramid_rotation, // amount to rotate in radians
-      [0, 0, 1]
-    ); // axis to rotate around (Z)
-    mat4.rotate(
-      model_view_matrix, // destination matrix
-      model_view_matrix, // matrix to rotate
-      pyramid_rotation * 0.7, // amount to rotate in radians
-      [0, 1, 0]
-    ); // axis to rotate around (Y)
-    mat4.rotate(
-      model_view_matrix, // destination matrix
-      model_view_matrix, // matrix to rotate
-      pyramid_rotation * 0.3, // amount to rotate in radians
-      [1, 0, 0]
-    ); // axis to rotate around (X)
-
-    // Tell WebGL how to pull out the positions from the position
-    // buffer into the vertex_position attribute.
-    set_position_attribute(gl, buffers, program_info);
-
-    set_color_attribute(gl, buffers, program_info);
-
-    // Tell WebGL which indices to use to index the vertices
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.indices);
-
-    // Tell WebGL to use our program when drawing
-    gl.useProgram(program_info.program);
-
-    // Set the shader uniforms
-    gl.uniformMatrix4fv(
-      program_info.uniform_locations.projection_matrix,
-      false,
-      projection_matrix
-    );
-
-    gl.uniformMatrix4fv(
-      program_info.uniform_locations.model_view_matrix,
-      false,
-      model_view_matrix
-    );
-
-    // Draw elements
-    const vertex_count = 21;
     const type = gl.UNSIGNED_SHORT;
     const offset = 0;
     gl.drawElements(gl.TRIANGLES, vertex_count, type, offset);
@@ -506,12 +294,12 @@ document.addEventListener("DOMContentLoaded", function () {
     gl.enableVertexAttribArray(program_info.attribute_locations.vertex_color);
   };
 
-  const draw_cube = () => {
+  const draw_3d = (canva, positions, colors, indices, vertex_count) => {
     // Get first canva HTML element
-    const first_canvas = document.querySelector("#glcanvas");
+    const canvas = document.querySelector(canva);
 
     // Initialize GL
-    const gl = first_canvas.getContext("webgl");
+    const gl = canvas.getContext("webgl");
 
     // Check if browser supports WebGL or not
     if (gl === null) {
@@ -556,8 +344,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Here's where we call the routine that builds all the
     // objects we'll be drawing.
-    const buffers = create_buffers_cube(gl);
+    const buffers = create_buffers(gl, positions, colors, indices);
     let then = 0;
+    let delta = 0;
+    let rotation = 0;
 
     // Draw the scene repeatedly
     const render = (now) => {
@@ -565,14 +355,14 @@ document.addEventListener("DOMContentLoaded", function () {
       now *= 0.001;
 
       // delta1 and then to rotate cube continously
-      delta1 = now - then;
+      delta = now - then;
       then = now;
 
       // Draw scene
-      draw_scene_cube(gl, program_info, buffers, cube_rotation);
+      draw_scene(gl, program_info, buffers, rotation, vertex_count);
 
       // Update radian
-      cube_rotation += delta1;
+      rotation += delta;
 
       // Render animation continously
       requestAnimationFrame(render);
@@ -582,80 +372,128 @@ document.addEventListener("DOMContentLoaded", function () {
     requestAnimationFrame(render);
   };
 
+  const draw_cube = () => {
+    const positions = [
+      // Front face
+      -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0, 1.0,
+
+      // Back face
+      -1.0, -1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0, -1.0,
+
+      // Top face
+      -1.0, 1.0, -1.0, -1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, -1.0,
+
+      // Bottom face
+      -1.0, -1.0, -1.0, 1.0, -1.0, -1.0, 1.0, -1.0, 1.0, -1.0, -1.0, 1.0,
+
+      // Right face
+      1.0, -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0,
+
+      // Left face
+      -1.0, -1.0, -1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0,
+    ];
+
+    const colors = [
+      [1.0, 0.0, 0.0, 1.0], // Red
+      [0.0, 1.0, 0.0, 1.0], // Green
+      [0.0, 0.0, 1.0, 1.0], // Blue
+      [1.0, 1.0, 0.0, 1.0], // Yellow
+    ];
+
+    const indices = [
+      0,
+      1,
+      2,
+      0,
+      2,
+      3, // front
+      4,
+      5,
+      6,
+      4,
+      6,
+      7, // back
+      8,
+      9,
+      10,
+      8,
+      10,
+      11, // top
+      12,
+      13,
+      14,
+      12,
+      14,
+      15, // bottom
+      16,
+      17,
+      18,
+      16,
+      18,
+      19, // right
+      20,
+      21,
+      22,
+      20,
+      22,
+      23, // left
+    ];
+
+    const vertex_count = 36;
+
+    draw_3d("#glcanvas", positions, colors, indices, vertex_count);
+  };
+
   const draw_pyramid = () => {
-    // Get second canva HTML element
-    const second_canvas = document.querySelector("#glcanvas2");
+    const positions = [
+      // Front face
+      0.0, 1.0, 0.0, -1.0, -1.0, 1.0, 1.0, -1.0, 1.0,
 
-    // Initialize GL
-    const gl = second_canvas.getContext("webgl");
+      // Back face
+      0.0, 1.0, 0.0, 1.0, -1.0, -1.0, -1.0, -1.0, -1.0,
 
-    // Check if browser supports WebGL or not
-    if (gl === null) {
-      alert("Error! Browser may not support WebGL");
-      return;
-    }
+      // Left face
+      0.0, 1.0, 0.0, -1.0, -1.0, -1.0, -1.0, -1.0, 1.0,
 
-    // Set clear color to black, fully opaque
-    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+      // Right face
+      0.0, 1.0, 0.0, 1.0, -1.0, 1.0, 1.0, -1.0, -1.0,
 
-    // Clear the color buffer with specified clear color
-    gl.clear(gl.COLOR_BUFFER_BIT);
+      // Area
+      1.0, -1.0, -1.0, 1.0, -1.0, 1.0, -1.0, -1.0, -1.0, 1.0, -1.0, 1.0, -1.0,
+      -1.0, 1.0, -1.0, -1.0, -1.0,
+    ];
 
-    // Initialize a shader program
-    const shader_program = create_shader_program(
-      gl,
-      vertex_shader_source,
-      fragment_shader_source
-    );
+    const colors = [
+      [1.0, 0.0, 0.0, 1.0], // Red
+      [0.0, 1.0, 0.0, 1.0], // Green
+      [0.0, 0.0, 1.0, 1.0], // Blue
+      [1.0, 1.0, 0.0, 1.0], // Yellow
+    ];
 
-    // Store Program Information
-    const program_info = {
-      program: shader_program,
-      attribute_locations: {
-        vertex_position: gl.getAttribLocation(
-          shader_program,
-          "aVertexPosition"
-        ),
-        vertex_color: gl.getAttribLocation(shader_program, "aVertexColor"),
-      },
-      uniform_locations: {
-        projection_matrix: gl.getUniformLocation(
-          shader_program,
-          "uProjectionMatrix"
-        ),
-        model_view_matrix: gl.getUniformLocation(
-          shader_program,
-          "uModelViewMatrix"
-        ),
-      },
-    };
+    const indices = [
+      0,
+      1,
+      2, // front
+      3,
+      4,
+      5, // back
+      6,
+      7,
+      8, // left
+      9,
+      10,
+      11, // right
+      12,
+      13,
+      14,
+      15,
+      16,
+      17, // two triangle to make area
+    ];
 
-    // Here's where we call the routine that builds all the
-    // objects we'll be drawing.
-    const buffers = create_buffers_pyramid(gl);
-    let then = 0;
+    const vertex_count = 18;
 
-    // Draw the scene repeatedly
-    const render = (now) => {
-      // convert to miliseconds
-      now *= 0.001;
-
-      // delta2 and then to rotate cube continously
-      delta2 = now - then;
-      then = now;
-
-      // Draw scene
-      draw_scene_pyramid(gl, program_info, buffers, pyramid_rotation);
-
-      // Update radian
-      pyramid_rotation += delta2;
-
-      // Render animation continously
-      requestAnimationFrame(render);
-    };
-
-    // Render animation cube
-    requestAnimationFrame(render);
+    draw_3d("#glcanvas2", positions, colors, indices, vertex_count);
   };
 
   // Draw cube
